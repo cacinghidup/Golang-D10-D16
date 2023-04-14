@@ -12,13 +12,13 @@
             --bs-btn-color:orangered;--bs-btn-border-color:orangered;--bs-btn-hover-color:#fff;--bs-btn-hover-bg:orangered;--bs-btn-hover-border-color:orangered;--bs-btn-focus-shadow-rgb:13,110,253;--bs-btn-active-color:#fff;--bs-btn-active-bg:orangered;--bs-btn-active-border-color:orangered;--bs-btn-active-shadow:inset 0 3px 5px rgba(0, 0, 0, 0.125);--bs-btn-disabled-color:orangered;--bs-btn-disabled-bg:transparent;--bs-btn-disabled-border-color:orangered;--bs-gradient:none
         }
     </style>
-
-</head>
+  </head>
+  
   <body>
     <nav class="navbar navbar-expand-md bg-body-tertiary">
         <div class="container-fluid mx-4">
           <a class="navbar-brand" href="https://dumbways.id/">
-            <img style="height: 50px; width: 75px;" src="assets/img/dumbwaysLogo.png">
+            <img style="height: 50px; width: 75px;" src="/assets/img/dumbwaysLogo.png">
           </a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -29,7 +29,7 @@
                 <a class="nav-link" href="/">Home</a>
               </li>
               <li class="nav-item mx-2">
-                <a class="nav-link active" href="/addProject">Add Project</a>
+                <a class="nav-link" href="/addProject">Add Project</a>
               </li>
             </ul>
             <div>
@@ -40,29 +40,29 @@
           </div>
         </div>
     </nav>
-    <form action="/addProject" method="post" autocomplete="off">
+    <form action="/editProject/:id" method="post" autocomplete="off">
       <div class="d-flex row w-75 justify-content-center mx-auto">
-          <p class="h3 text-center my-4">ADD MY PROJECT</p>
+          <p class="h3 text-center my-4">EDIT MY PROJECT</p>
           <div class="mb-3">
               <label class="form-label">Project Name</label>
-              <input name="titleProject" type="text" class="form-control" id="exampleFormControlInput1">
+              <input type="text" placeholder="{{.projectDetail.Title}}" class="form-control" name="titleProject">
           </div>
           <div class="d-flex row p-0">
               <div class="w-50">
                   <label class="form-label">Start Date</label>
                   <div>
-                      <input name="startDate" class="form-control" id="tglMulai" type="date">
+                      <input class="form-control" name="startDate" id="tglMulai" type="date">
                   </div>
               </div>
               <div class="w-50 mb-3">
                   <label class="form-label">End Date</label>
                   <div>
-                      <input name="endDate" class="form-control" id="tglAkhir" type="date">
+                      <input class="form-control" name="endDate" id="tglAkhir" type="date">
                   </div>
               </div>
               <div class="mb-3">
                   <label class="form-label">Deksripsi</label>
-                  <textarea name="contentProject" class="form-control" id="textAreaProject" rows="3" style="resize: none;"></textarea>
+                  <textarea class="form-control" placeholder="{{.projectDetail.Content}}" name="contentProject" rows="3" style="resize: none;"></textarea>
               </div>
                   <label class="form-label">Technologies</label>
               <div class="mb-3 px-4 row row-cols-1 row-cols-sm-2">

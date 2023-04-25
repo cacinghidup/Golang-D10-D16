@@ -117,18 +117,20 @@
     <div class="container-fluid mt-5">
         <p class="h2 text-center">MY PROJECT</p>
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 justify-content-evenly">
+            
+            <!-- Dynamic Content -->
             {{range $index, $data := .dataProject}}
             <div class="col card my-3" style="width: 19rem;">
                 <img src="assets/img/progamming.jpeg" class="mt-2 card-img-top rounded">
                 <div class="card-title fw-bold mt-2 mx-2">
-                    <a class="linkDetail" href="/projectDetail/{{$index}}">
+                    <a class="linkDetail" href="/projectDetail/{{$data.Id}}">
                         <p class="h5 m-0">
                             {{$data.Title}}
                         </p>
                     </a>
                 </div>
                 <div class="card-text m-0 mx-2">
-                    <small class="text-muted"> {{$data.DateMonth}}</small>
+                    <small class="text-muted"> {{$data.Diff}} Bulan</small>
                 </div>
                 <div class="card-text m-0 mx-2">
                     <small class="text-muted"> {{$data.Author}}</small>
@@ -154,12 +156,12 @@
                 </div>
                 <div class="d-flex justify-content-evenly mx-2 my-3">
                     <div>
-                        <a href="/editProject/{{$index}}" class="linkDetail">
+                        <a href="/editProject/{{$data.Id}}" class="linkDetail">
                             <button class="btn btn-info" style="width: 125px;">Edit</button>
                         </a>
                     </div>
                     <div>
-                        <a href="/deleteProject/{{$index}}" class="linkDetail">
+                        <a href="/deleteProject/{{$data.Id}}" class="linkDetail">
                             <button class="btn btn-info" style="width: 125px;">Delete</button>
                         </a>
                     </div>

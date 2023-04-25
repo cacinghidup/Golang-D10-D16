@@ -1,16 +1,18 @@
 package main
 
 import (
-	// "fmt"
+	"context"
+	"fmt"
 	"net/http"
+	"personal-web/connect"
 	"strconv"
 	"text/template"
-	"time"
 
 	"github.com/labstack/echo/v4"
 )
 
 type AddProject struct {
+	Id         int
 	Title      string
 	Content    string
 	Author     string
@@ -22,37 +24,44 @@ type AddProject struct {
 	TechGolang string
 	TechGithub string
 	TechNodeJs string
+	Image      string
+	Diff       int
 }
 
 var DataProject = []AddProject{
-	{
-		Title:      "Dumbways Versi 1",
-		Content:    "Mampus Gw, Bingung begini",
-		Author:     "Yoga Jaim",
-		DateMonth:  "Durasi 1 Bulan",
-		StartDate:  "01 Maret 2023",
-		EndDate:    "01 April 2023",
-		DateDay:    "30 Hari",
-		TechJS:     "JavaScript",
-		TechGolang: "Golang",
-		TechGithub: "Github",
-	},
-	{
-		Title:      "Dumbways Versi 2",
-		Content:    "Mampus, Apa yang dipelajari ya",
-		Author:     "Yoga Gila",
-		DateMonth:  "Durasi 1 Bulan",
-		StartDate:  "01 Maret 2023",
-		EndDate:    "01 April 2023",
-		DateDay:    "30 Hari",
-		TechGolang: "Golang",
-		TechGithub: "Github",
-		TechNodeJs: "NodeJs",
-	},
+	// {
+	// 	Title:      "Dumbways Versi 1",
+	// 	Content:    "Mampus Gw, Bingung begini",
+	// 	Author:     "Yoga Jaim",
+	// 	DateMonth:  "Durasi 1 Bulan",
+	// 	StartDate:  "01 Maret 2023",
+	// 	EndDate:    "01 April 2023",
+	// 	DateDay:    "30 Hari",
+	// 	TechJS:     "JavaScript",
+	// 	TechGolang: "Golang",
+	// 	TechGithub: "Github",
+	// },
+	// {
+	// 	Title:      "Dumbways Versi 2",
+	// 	Content:    "Mampus, Apa yang dipelajari ya",
+	// 	Author:     "Yoga Gila",
+	// 	DateMonth:  "Durasi 1 Bulan",
+	// 	StartDate:  "01 Maret 2023",
+	// 	EndDate:    "01 April 2023",
+	// 	DateDay:    "30 Hari",
+	// 	TechGolang: "Golang",
+	// 	TechGithub: "Github",
+	// 	TechNodeJs: "NodeJs",
+	// },
 }
 
 // Func ketika server dimulai
 func main() {
+
+	//connect to database
+	connect.DatabaseConnect()
+
+	// Inisiasi echo di variabel e
 	e := echo.New()
 
 	//Static for Access Folder
@@ -79,11 +88,28 @@ func home(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"Message": err.Error()})
 	}
 
-	data := map[string]interface{}{
-		"dataProject": DataProject,
+	data, _ := connect.Conn.Query(context.Background(), "SELECT Id, Title, (End_Date - Start_Date) / 30 as Diff, Content, Author, Techno[1], Techno[2], Techno[3], Techno[4], Image FROM tb_projectweb46;")
+
+	var result []AddProject
+
+	for data.Next() {
+
+		var each = AddProject{}
+		err := data.Scan(&each.Id, &each.Title, &each.Diff, &each.Content, &each.Author, &each.TechJS, &each.TechGolang, &each.TechGithub, &each.TechNodeJs, &each.Image)
+		if err != nil {
+			fmt.Println(err.Error())
+			return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": err.Error()})
+		}
+
+		result = append(result, each)
+
 	}
 
-	return template.Execute(c.Response(), data)
+	dataQuery := map[string]interface{}{
+		"dataProject": result,
+	}
+
+	return template.Execute(c.Response(), dataQuery)
 }
 
 // Func GET contactMe
@@ -110,160 +136,106 @@ func addProject(c echo.Context) error {
 
 // Func menampilkan detailProject
 func projectDetail(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+
 	template, err := template.ParseFiles("views/project-detail.html")
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"Message": err.Error()})
 	}
 
-	id, _ := strconv.Atoi(c.Param("id"))
-
 	var detailProject = AddProject{}
 
-	for index, data := range DataProject {
-		if id == index {
-			detailProject = AddProject{
-				Title:      data.Title,
-				Content:    data.Content,
-				StartDate:  data.StartDate,
-				EndDate:    data.EndDate,
-				DateDay:    data.DateDay,
-				TechJS:     data.TechJS,
-				TechGolang: data.TechGolang,
-				TechGithub: data.TechGithub,
-				TechNodeJs: data.TechNodeJs,
-			}
-		}
+	dataErr := connect.Conn.QueryRow(context.Background(), "SELECT Id, Title, End_Date-Start_Date as Diff, TO_CHAR(Start_Date, 'DD-Mon-YYYY') Start_Date, TO_CHAR(End_Date, 'DD-Mon-YYYY') End_Date, Content, Image, Author, Techno[1], Techno[2], Techno[3], Techno[4] FROM tb_projectweb46 WHERE Id = $1;", id).Scan(&detailProject.Id, &detailProject.Title, &detailProject.Diff, &detailProject.StartDate, &detailProject.EndDate, &detailProject.Content, &detailProject.Image, &detailProject.Author, &detailProject.TechJS, &detailProject.TechGolang, &detailProject.TechGithub, &detailProject.TechNodeJs)
+
+	if dataErr != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": dataErr.Error()})
 	}
 
-	data := map[string]interface{}{
+	dataQuery := map[string]interface{}{
 		"projectDetail": detailProject,
 	}
 
-	return template.Execute(c.Response(), data)
+	return template.Execute(c.Response(), dataQuery)
 }
 
 // Func POST addProject
 func formAddProject(c echo.Context) error {
 
-	// Untuk menghitung waktu
-	var Date1, Date2 string
-	var diffMonth, diffDay int
+	Title := c.FormValue("titleProject")
+	Content := c.FormValue("contentProject")
+	Author := "Yoga Wicaksono"
+	StartDate := c.FormValue("startDate")
+	EndDate := c.FormValue("endDate")
+	TechJS := c.FormValue("JavaScript")
+	TechGolang := c.FormValue("Golang")
+	TechGithub := c.FormValue("Github")
+	TechNodeJs := c.FormValue("NodeJs")
+	Image := "image.png"
 
-	Date1 = c.FormValue("startDate")
-	Date2 = c.FormValue("endDate")
+	_, err := connect.Conn.Exec(context.Background(), "INSERT INTO tb_projectweb46 (Title, Content, Author, Start_Date, End_Date, Techno[1], Techno[2], Techno[3], Techno[4], Image) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", Title, Content, Author, StartDate, EndDate, TechJS, TechGolang, TechGithub, TechNodeJs, Image)
 
-	//Merubah string date ke time
-	date1, _ := time.Parse("2006-01-02", Date1)
-	date2, _ := time.Parse("2006-01-02", Date2)
-
-	//Format RFC822
-	date1NewForm := date1.Format(time.RFC822)
-	date2NewForm := date2.Format(time.RFC822)
-
-	//untuk Bulan
-	diffMonth = int(date2.Sub(date1).Hours() / 24 / 30)
-	//Ubah integer ke string untuk Bulan
-	diffValueMonth := strconv.Itoa(diffMonth)
-
-	//untuk Day
-	diffDay = int(date2.Sub(date1).Hours() / 24)
-	//Ubah integer ke string untuk Day
-	diffValueDay := strconv.Itoa(diffDay)
-
-	var newProject = AddProject{
-		Title:      c.FormValue("titleProject"),
-		Content:    c.FormValue("contentProject"),
-		Author:     "Yoga Wicaksono",
-		DateMonth:  ("Durasi " + diffValueMonth + " Bulan"),
-		DateDay:    (diffValueDay + " Hari"),
-		StartDate:  date1NewForm,
-		EndDate:    date2NewForm,
-		TechJS:     c.FormValue("JavaScript"),
-		TechGolang: c.FormValue("Golang"),
-		TechGithub: c.FormValue("Github"),
-		TechNodeJs: c.FormValue("NodeJs"),
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": err.Error()})
 	}
-
-	DataProject = append(DataProject, newProject)
 
 	return c.Redirect(http.StatusMovedPermanently, "/")
 }
 
 // Func GET editProject
 func editProject(c echo.Context) error {
-
-	template, err := template.ParseFiles("views/edit-project.html")
-
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	var editProject = AddProject{}
-
-	for index, data := range DataProject {
-		if id == index {
-			editProject = AddProject{
-				Title:   data.Title,
-				Content: data.Content,
-			}
-		}
-	}
-
-	data := map[string]interface{}{
-		"projectDetail": editProject,
-	}
+	template, err := template.ParseFiles("views/edit-project.html")
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"Message": err.Error()})
 	}
 
-	return template.Execute(c.Response(), data)
+	//--------------------------------------------------------------------------------------------//
+
+	var editProject = AddProject{}
+
+	dataErr := connect.Conn.QueryRow(context.Background(), "SELECT Title, Content FROM tb_projectweb46 WHERE Id = $1;", id).Scan(&editProject.Title, &editProject.Content)
+
+	if dataErr != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": dataErr.Error()})
+	}
+
+	dataQuery := map[string]interface{}{
+		"projectDetail": editProject,
+	}
+
+	//----------------------------------------------------------------------------------------------//
+
+	_, editErr := connect.Conn.Exec(context.Background(), "DELETE FROM tb_projectweb46 WHERE Id=$1", id)
+
+	if editErr != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": editErr.Error()})
+	}
+
+	return template.Execute(c.Response(), dataQuery)
 }
 
 // Func POST editProject
 func editProjectDone(c echo.Context) error {
 
-	// Untuk menghitung waktu
-	var Date1, Date2 string
-	var diffMonth, diffDay int
+	Title := c.FormValue("titleProject")
+	Content := c.FormValue("contentProject")
+	Author := "Yoga Wicaksono"
+	StartDate := c.FormValue("startDate")
+	EndDate := c.FormValue("endDate")
+	TechJS := c.FormValue("JavaScript")
+	TechGolang := c.FormValue("Golang")
+	TechGithub := c.FormValue("Github")
+	TechNodeJs := c.FormValue("NodeJs")
+	Image := "image.png"
 
-	Date1 = c.FormValue("startDate")
-	Date2 = c.FormValue("endDate")
+	_, err := connect.Conn.Exec(context.Background(), "INSERT INTO tb_projectweb46 (Title, Content, Author, Start_Date, End_Date, Techno[1], Techno[2], Techno[3], Techno[4], Image) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", Title, Content, Author, StartDate, EndDate, TechJS, TechGolang, TechGithub, TechNodeJs, Image)
 
-	//Merubah string date ke time
-	date1, _ := time.Parse("2006-01-02", Date1)
-	date2, _ := time.Parse("2006-01-02", Date2)
-
-	//Format RFC822
-	date1NewForm := date1.Format(time.RFC822)
-	date2NewForm := date2.Format(time.RFC822)
-
-	//untuk Bulan
-	diffMonth = int(date2.Sub(date1).Hours() / 24 / 30)
-	//Ubah integer ke string untuk Bulan
-	diffValueMonth := strconv.Itoa(diffMonth)
-
-	//untuk Day
-	diffDay = int(date2.Sub(date1).Hours() / 24)
-	//Ubah integer ke string untuk Day
-	diffValueDay := strconv.Itoa(diffDay)
-
-	id, _ := strconv.Atoi(c.Param("id"))
-
-	var editProject = AddProject{
-		Title:      c.FormValue("titleProject"),
-		Content:    c.FormValue("contentProject"),
-		Author:     "Yoga Wicaksono",
-		DateMonth:  ("Durasi " + diffValueMonth + " Bulan"),
-		DateDay:    (diffValueDay + " Hari"),
-		StartDate:  date1NewForm,
-		EndDate:    date2NewForm,
-		TechJS:     c.FormValue("JavaScript"),
-		TechGolang: c.FormValue("Golang"),
-		TechGithub: c.FormValue("Github"),
-		TechNodeJs: c.FormValue("NodeJs"),
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": err.Error()})
 	}
-
-	DataProject = append(DataProject[:id+1], editProject)
 
 	return c.Redirect(http.StatusMovedPermanently, "/")
 }
@@ -272,7 +244,11 @@ func editProjectDone(c echo.Context) error {
 func deleteProject(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	DataProject = append(DataProject[:id], DataProject[id+1:]...)
+	_, err := connect.Conn.Exec(context.Background(), "DELETE FROM tb_projectweb46 WHERE Id=$1", id)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": err.Error()})
+	}
 
 	return c.Redirect(http.StatusMovedPermanently, "/")
 }

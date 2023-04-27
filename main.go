@@ -192,11 +192,9 @@ func editProject(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"Message": err.Error()})
 	}
 
-	//--------------------------------------------------------------------------------------------//
-
 	var editProject = AddProject{}
 
-	dataErr := connect.Conn.QueryRow(context.Background(), "SELECT Title, Content FROM tb_projectweb46 WHERE Id = $1;", id).Scan(&editProject.Title, &editProject.Content)
+	dataErr := connect.Conn.QueryRow(context.Background(), "SELECT Id, Title, Content FROM tb_projectweb46 WHERE Id = $1;", id).Scan(&editProject.Id, &editProject.Title, &editProject.Content)
 
 	if dataErr != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": dataErr.Error()})
@@ -206,19 +204,13 @@ func editProject(c echo.Context) error {
 		"projectDetail": editProject,
 	}
 
-	//----------------------------------------------------------------------------------------------//
-
-	_, editErr := connect.Conn.Exec(context.Background(), "DELETE FROM tb_projectweb46 WHERE Id=$1", id)
-
-	if editErr != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": editErr.Error()})
-	}
-
 	return template.Execute(c.Response(), dataQuery)
 }
 
 // Func POST editProject
 func editProjectDone(c echo.Context) error {
+
+	Id, _ := strconv.Atoi(c.Param("id"))
 
 	Title := c.FormValue("titleProject")
 	Content := c.FormValue("contentProject")
@@ -231,7 +223,7 @@ func editProjectDone(c echo.Context) error {
 	TechNodeJs := c.FormValue("NodeJs")
 	Image := "image.png"
 
-	_, err := connect.Conn.Exec(context.Background(), "INSERT INTO tb_projectweb46 (Title, Content, Author, Start_Date, End_Date, Techno[1], Techno[2], Techno[3], Techno[4], Image) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", Title, Content, Author, StartDate, EndDate, TechJS, TechGolang, TechGithub, TechNodeJs, Image)
+	_, err := connect.Conn.Exec(context.Background(), "UPDATE tb_projectweb46 SET Title=$2, Content=$3, Author=$4, Start_Date=$5, End_Date=$6, Techno[1]=$7, Techno[2]=$8, Techno[3]=$9, Techno[4]=$10, Image=$11 WHERE Id = $1", Id, Title, Content, Author, StartDate, EndDate, TechJS, TechGolang, TechGithub, TechNodeJs, Image)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": err.Error()})

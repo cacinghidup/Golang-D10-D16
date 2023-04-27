@@ -1,0 +1,1 @@
+UPDATE tb_projectweb46 SET Title='Test', Content='Test', Author='Yoga Wicaksono', Start_Date='2023/01/05', End_Date='2023/04/10', Techno[1]='JavaScript', Techno[2]='', Techno[3]='', Techno[4]='', Image='image.png' WHERE Id = 8;

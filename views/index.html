@@ -43,21 +43,52 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-              <li class="nav-item mx-2">
-                <a class="nav-link active" aria-current="page" href="/">Home</a>
+              <li class="nav-item mx-2 my-1">
+                <a class="nav-link active" href="/">Home</a>
               </li>
-              <li class="nav-item mx-2">
+                {{if .dataSession.IsLogin}}
+              <li class="nav-item mx-2 my-1">
                 <a class="nav-link" href="/addProject">Add Project</a>
               </li>
+                {{else}}
+              <div style="display: none;"></div>
+                {{end}}
             </ul>
-            <div>
+            <div class="navbar-nav mb-2 mb-lg-0">
+                {{if .dataSession.IsLogin}}
+              <li class="nav-item mx-2 my-1">
+                <a class="nav-link active" href="#">Halo, {{.dataSession.Name}}</a>
+              </li>
+              <li class="nav-item mx-2 my-1">
+                <a class="nav-link" href="/logout">Logout</a>
+              </li>
+                {{else}}
+              <li class="nav-item mx-2 my-1">
+                <a class="nav-link" href="/formRegister">Register</a>
+              </li>
+              <li class="nav-item mx-2 my-1">
+                <a class="nav-link" href="/formLogin">Login</a>
+              </li>
+                {{end}}
               <a href="/contactMe">
-                  <button class="btn btn-outline-primary">Contact Me</button>
+                  <button class="btn btn-outline-primary mx-2 my-1">Contact Me</button>
               </a>
             </div>
           </div>
         </div>
     </nav>
+
+    {{if .FlashMessage}}
+    {{if .FlashStatus}}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+    {{.FlashMessage}}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {{else}}
+    <div></div>
+    {{end}}
+    {{end}}
+
     <div class="card m-4">
         <div class="row justify-content-around align-items-center">
             <div class="col-md-7 m-1 text-center">
@@ -155,6 +186,7 @@
                     </div>
                 </div>
                 <div class="d-flex justify-content-evenly mx-2 my-3">
+                        {{if $.dataSession.IsLogin}}
                     <div>
                         <a href="/editProject/{{$data.Id}}" class="linkDetail">
                             <button class="btn btn-info" style="width: 125px;">Edit</button>
@@ -165,6 +197,9 @@
                             <button class="btn btn-info" style="width: 125px;">Delete</button>
                         </a>
                     </div>
+                        {{else}}
+                    <div style="display: none;"></div>
+                        {{end}}
                 </div>
             </div>
             {{end}}

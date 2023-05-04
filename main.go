@@ -83,20 +83,19 @@ func main() {
 
 // Func GET home
 func home(c echo.Context) error {
-	session, _ := session.Get("session", c)
-
-	if session.Values["isLogin"] != true {
-		userData.IsLogin = false
-	} else {
-		userData.IsLogin = session.Values["isLogin"].(bool)
-		userData.Name = session.Values["name"].(string)
-	}
 
 	template, err := template.ParseFiles("views/index.html")
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"Message": err.Error()})
 	}
+
+	// if session.Values["isLogin"] != true {
+	// 	userData.IsLogin = false
+	// } else {
+	// 	userData.IsLogin = session.Values["isLogin"].(bool)
+	// 	userData.Name = session.Values["name"].(string)
+	// }
 
 	data, _ := connect.Conn.Query(context.Background(), "SELECT Id, Title, (End_Date - Start_Date) / 30 as Diff, Content, Author, Techno[1], Techno[2], Techno[3], Techno[4], Image FROM tb_projectweb46;")
 
@@ -115,18 +114,19 @@ func home(c echo.Context) error {
 
 	}
 
+	session, _ := session.Get("session", c)
+
 	dataQuery := map[string]interface{}{
 		"dataProject":  result,
 		"dataSession":  userData,
-		"FlashStatus":  session.Values["alertStatus"],
+		"FlashStatus":  session.Values["status"],
 		"FlashMessage": session.Values["message"],
+		"FlashName":    session.Values["name"],
 	}
 
-	// session.Options.MaxAge = -1
-	// session.Save(c.Request(), c.Response())
-
-	// delete(session.Values, "alertStatus")
-	// delete(session.Values, "message")
+	// delete(session.Values, "status")
+	delete(session.Values, "message")
+	session.Save(c.Request(), c.Response())
 
 	return template.Execute(c.Response(), dataQuery)
 }
@@ -326,7 +326,7 @@ func login(c echo.Context) error {
 	session, _ := session.Get("session", c)
 
 	messageFlash := map[string]interface{}{
-		"FlashStatus":  session.Values["alertStatus"],
+		"FlashStatus":  session.Values["status"],
 		"FlashMessage": session.Values["message"],
 	}
 
@@ -336,9 +336,9 @@ func login(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": err.Error()})
 	}
 
-	delete(session.Values, "alertStatus")
+	delete(session.Values, "status")
 	delete(session.Values, "message")
-	// session.Save(c.Request(), c.Response())
+	session.Save(c.Request(), c.Response())
 
 	return template.Execute(c.Response(), messageFlash)
 }
@@ -366,9 +366,9 @@ func loginUser(c echo.Context) error {
 	}
 
 	session, _ := session.Get("session", c)
-	session.Options.MaxAge = 25205
+	session.Options.MaxAge = 3600
 	session.Values["message"] = "Login Success"
-	session.Values["alertStatus"] = true // show alert
+	session.Values["status"] = true // show alert
 	session.Values["name"] = user.Name
 	session.Values["id"] = user.Id
 	session.Values["isLogin"] = true // access login
@@ -403,7 +403,7 @@ func registerUser(c echo.Context) error {
 func redirectWithMessage(c echo.Context, message string, status bool, path string) error {
 	session, _ := session.Get("session", c)
 	session.Values["message"] = message
-	session.Values["alertStatus"] = status
+	session.Values["status"] = status
 	session.Save(c.Request(), c.Response())
 
 	return c.Redirect(http.StatusSeeOther, path)
@@ -412,7 +412,8 @@ func redirectWithMessage(c echo.Context, message string, status bool, path strin
 func logout(c echo.Context) error {
 	session, _ := session.Get("session", c)
 	session.Options.MaxAge = -1
+	session.Values["isLogin"] = false
 	session.Save(c.Request(), c.Response())
 
-	return c.Redirect(http.StatusSeeOther, "/")
+	return c.Redirect(http.StatusTemporaryRedirect, "/")
 }

@@ -50,6 +50,18 @@
           </div>
         </div>
     </nav>
+
+    {{if .FlashMessage}}
+    {{if .FlashStatus}}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+    {{.FlashMessage}}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {{else}}
+    <div></div>
+    {{end}}
+    {{end}}
+    
     <div class="d-flex row justify-content-center mx-auto w-50" >
         <form action="/register" method="post" autocomplete="off">
             <p class="h2 text-center my-5">Register</p>

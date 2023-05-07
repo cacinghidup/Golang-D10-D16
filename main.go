@@ -332,11 +332,6 @@ func register(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"Message": err.Error()})
 	}
 
-	return template.Execute(c.Response(), nil)
-}
-
-// Fungsi GET untuk menampilkan halaman login
-func login(c echo.Context) error {
 	session, _ := session.Get("session", c)
 
 	messageFlash := map[string]interface{}{
@@ -344,10 +339,26 @@ func login(c echo.Context) error {
 		"FlashMessage": session.Values["message"],
 	}
 
+	delete(session.Values, "status")
+	delete(session.Values, "message")
+	session.Save(c.Request(), c.Response())
+
+	return template.Execute(c.Response(), messageFlash)
+}
+
+// Fungsi GET untuk menampilkan halaman login
+func login(c echo.Context) error {
 	template, err := template.ParseFiles("views/login.html")
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": err.Error()})
+	}
+
+	session, _ := session.Get("session", c)
+
+	messageFlash := map[string]interface{}{
+		"FlashStatus":  session.Values["status"],
+		"FlashMessage": session.Values["message"],
 	}
 
 	delete(session.Values, "status")
@@ -408,7 +419,7 @@ func registerUser(c echo.Context) error {
 
 	_, err = connect.Conn.Exec(context.Background(), "INSERT INTO tb_user (name, email, password) VALUES ($1, $2, $3)", name, email, passwordHash)
 	if err != nil {
-		redirectWithMessage(c, "Register failed, please try again!", false, "/formRegister")
+		redirectWithMessage(c, "Register failed, please try again!", true, "/formRegister")
 	}
 
 	return redirectWithMessage(c, "Register success", true, "/formLogin")

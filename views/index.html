@@ -151,57 +151,115 @@
             
             <!-- Dynamic Content -->
             {{range $index, $data := .dataProject}}
-            <div class="col card my-3" style="width: 19rem;">
-                <img src="upload/{{$data.Image}}" class="mt-2 card-img-top rounded">
-                <div class="card-title fw-bold mt-2 mx-2">
-                    <a class="linkDetail" href="/projectDetail/{{$data.UserId}}">
-                        <p class="h5 m-0">
-                            {{$data.Title}}
+                {{if $data.LoginName}}
+                <div class="col card my-3" style="width: 19rem;">
+                    <img src="upload/{{$data.Image}}" class="mt-2 card-img-top rounded">
+                    <div class="card-title fw-bold mt-2 mx-2">
+                        <a class="linkDetail" href="/projectDetail/{{$data.UserId}}">
+                            <p class="h5 m-0">
+                                {{$data.Title}}
+                            </p>
+                        </a>
+                    </div>
+                    <div class="card-text m-0 mx-2">
+                        <small class="text-muted"> {{$data.Diff}} Bulan</small>
+                    </div>
+                    <div class="card-text m-0 mx-2">
+                        <small class="text-muted"> {{$data.Author}}</small>
+                    </div>
+                    <div class="card-text mx-2">
+                        <p class="justifyCustom fs-6 mt-4">
+                            {{$data.Content}}
                         </p>
-                    </a>
+                    </div>
+                    <div class="d-flex justify-content-around mx-2">
+                        <div class="{{$data.TechJS}} mx-1" style="display: none;">
+                            <i class="fa-brands fa-square-js fa-2x"></i>
+                        </div>
+                        <div class="{{$data.TechGolang}} mx-1" style="display: none;">
+                            <i class="fa-brands fa-golang fa-2x"></i>
+                        </div>
+                        <div class="{{$data.TechGithub}} mx-1" style="display: none;">
+                            <i class="fa-brands fa-github fa-2x"></i>
+                        </div>
+                        <div class="{{$data.TechNodeJs}} mx-1" style="display: none;">
+                            <i class="fa-brands fa-node fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-evenly mx-2 my-3">
+                            {{if $.FlashStatus}}
+                        <div>
+                            <a href="/editProject/{{$data.Id}}" class="linkDetail">
+                                <button class="btn btn-info" style="width: 125px;">Edit</button>
+                            </a>
+                        </div>
+                        <div>
+                            <a href="/deleteProject/{{$data.Id}}" class="linkDetail">
+                                <button class="btn btn-info" style="width: 125px;">Delete</button>
+                            </a>
+                        </div>
+                            {{else}}
+                        <div style="display: none;"></div>
+                            {{end}}
+                    </div>
                 </div>
-                <div class="card-text m-0 mx-2">
-                    <small class="text-muted"> {{$data.Diff}} Bulan</small>
-                </div>
-                <div class="card-text m-0 mx-2">
-                    <small class="text-muted"> {{$data.Author}}</small>
-                </div>
-                <div class="card-text mx-2">
-                    <p class="justifyCustom fs-6 mt-4">
-                        {{$data.Content}}
-                    </p>
-                </div>
-                <div class="d-flex justify-content-around mx-2">
-                    <div class="{{$data.TechJS}} mx-1" style="display: none;">
-                        <i class="fa-brands fa-square-js fa-2x"></i>
+                {{else}}
+                    {{if $.DataSession.NotLogin}}
+                    <div class="col card my-3" style="width: 19rem;">
+                        <img src="upload/{{$data.Image}}" class="mt-2 card-img-top rounded">
+                        <div class="card-title fw-bold mt-2 mx-2">
+                            <a class="linkDetail" href="/projectDetail/{{$data.UserId}}">
+                                <p class="h5 m-0">
+                                    {{$data.Title}}
+                                </p>
+                            </a>
+                        </div>
+                        <div class="card-text m-0 mx-2">
+                            <small class="text-muted"> {{$data.Diff}} Bulan</small>
+                        </div>
+                        <div class="card-text m-0 mx-2">
+                            <small class="text-muted"> {{$data.Author}}</small>
+                        </div>
+                        <div class="card-text mx-2">
+                            <p class="justifyCustom fs-6 mt-4">
+                                {{$data.Content}}
+                            </p>
+                        </div>
+                        <div class="d-flex justify-content-around mx-2">
+                            <div class="{{$data.TechJS}} mx-1" style="display: none;">
+                                <i class="fa-brands fa-square-js fa-2x"></i>
+                            </div>
+                            <div class="{{$data.TechGolang}} mx-1" style="display: none;">
+                                <i class="fa-brands fa-golang fa-2x"></i>
+                            </div>
+                            <div class="{{$data.TechGithub}} mx-1" style="display: none;">
+                                <i class="fa-brands fa-github fa-2x"></i>
+                            </div>
+                            <div class="{{$data.TechNodeJs}} mx-1" style="display: none;">
+                                <i class="fa-brands fa-node fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-evenly mx-2 my-3">
+                                {{if $.FlashStatus}}
+                            <div>
+                                <a href="/editProject/{{$data.Id}}" class="linkDetail">
+                                    <button class="btn btn-info" style="width: 125px;">Edit</button>
+                                </a>
+                            </div>
+                            <div>
+                                <a href="/deleteProject/{{$data.Id}}" class="linkDetail">
+                                    <button class="btn btn-info" style="width: 125px;">Delete</button>
+                                </a>
+                            </div>
+                                {{else}}
+                            <div style="display: none;"></div>
+                                {{end}}
+                        </div>
                     </div>
-                    <div class="{{$data.TechGolang}} mx-1" style="display: none;">
-                        <i class="fa-brands fa-golang fa-2x"></i>
-                    </div>
-                    <div class="{{$data.TechGithub}} mx-1" style="display: none;">
-                        <i class="fa-brands fa-github fa-2x"></i>
-                    </div>
-                    <div class="{{$data.TechNodeJs}} mx-1" style="display: none;">
-                        <i class="fa-brands fa-node fa-2x"></i>
-                    </div>
-                </div>
-                <div class="d-flex justify-content-evenly mx-2 my-3">
-                        {{if $.FlashStatus}}
-                    <div>
-                        <a href="/editProject/{{$data.Id}}" class="linkDetail">
-                            <button class="btn btn-info" style="width: 125px;">Edit</button>
-                        </a>
-                    </div>
-                    <div>
-                        <a href="/deleteProject/{{$data.Id}}" class="linkDetail">
-                            <button class="btn btn-info" style="width: 125px;">Delete</button>
-                        </a>
-                    </div>
-                        {{else}}
+                    {{else}}
                     <div style="display: none;"></div>
-                        {{end}}
-                </div>
-            </div>
+                    {{end}}
+                {{end}}
             {{end}}
         </div>
     </div>

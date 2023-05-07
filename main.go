@@ -32,6 +32,7 @@ type AddProject struct {
 	Image      string
 	Diff       int
 	UserId     int
+	LoginName  bool
 }
 
 type User struct {
@@ -42,8 +43,9 @@ type User struct {
 }
 
 type SessionData struct {
-	IsLogin bool
-	Name    string
+	IsLogin  bool
+	Name     string
+	NotLogin bool
 }
 
 var DataProject = []AddProject{}
@@ -99,6 +101,12 @@ func home(c echo.Context) error {
 
 	data, _ := connect.Conn.Query(context.Background(), "SELECT tb_projectweb46.id, title, (End_Date - Start_Date) / 30 as Diff, content, tb_user.name AS author, Techno[1], Techno[2], Techno[3], Techno[4], image, tb_user.id FROM tb_projectweb46 LEFT JOIN tb_user ON tb_projectweb46.author = tb_user.id ORDER BY tb_projectweb46.id DESC;")
 
+	if session.Values["isLogin"] != true {
+		userData.NotLogin = true
+	} else {
+		userData.NotLogin = false
+	}
+
 	for data.Next() {
 
 		var each = AddProject{}
@@ -108,13 +116,19 @@ func home(c echo.Context) error {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": err.Error()})
 		}
 
+		if session.Values["name"] == each.Author {
+			each.LoginName = true
+		} else {
+			each.LoginName = false
+		}
+
 		result = append(result, each)
 
 	}
 
 	dataQuery := map[string]interface{}{
 		"dataProject":  result,
-		"dataSession":  userData,
+		"DataSession":  userData,
 		"FlashStatus":  session.Values["status"],
 		"FlashMessage": session.Values["message"],
 		"FlashName":    session.Values["name"],

@@ -152,9 +152,9 @@
             <!-- Dynamic Content -->
             {{range $index, $data := .dataProject}}
             <div class="col card my-3" style="width: 19rem;">
-                <img src="assets/img/progamming.jpeg" class="mt-2 card-img-top rounded">
+                <img src="upload/{{$data.Image}}" class="mt-2 card-img-top rounded">
                 <div class="card-title fw-bold mt-2 mx-2">
-                    <a class="linkDetail" href="/projectDetail/{{$data.Id}}">
+                    <a class="linkDetail" href="/projectDetail/{{$data.UserId}}">
                         <p class="h5 m-0">
                             {{$data.Title}}
                         </p>

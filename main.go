@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"personal-web/connect"
+	"personal-web/middleware"
 	"strconv"
 	"text/template"
 
@@ -30,6 +31,7 @@ type AddProject struct {
 	TechNodeJs string
 	Image      string
 	Diff       int
+	UserId     int
 }
 
 type User struct {
@@ -61,16 +63,17 @@ func main() {
 
 	//Static for Access Folder
 	e.Static("assets/", "assets")
+	e.Static("upload/", "upload")
 
 	//Routing
-	e.GET("/", home)                            // localhost:5000/
-	e.GET("/contactMe", contactMe)              // localhost:5000/contactMe
-	e.GET("/addProject", addProject)            // localhost:5000/addProject
-	e.GET("/projectDetail/:id", projectDetail)  // localhost:5000/projectDetail
-	e.POST("/addProject", formAddProject)       //localhost:5000/formAddProject
-	e.GET("/editProject/:id", editProject)      // localhost:5000/editProject/:id
-	e.POST("/editProject/:id", editProjectDone) //localhost:5000/editProject/:id
-	e.GET("/deleteProject/:id", deleteProject)  // localhost:5000/deleteProject/:id
+	e.GET("/", home)                                                   // localhost:5000/
+	e.GET("/contactMe", contactMe)                                     // localhost:5000/contactMe
+	e.GET("/addProject", addProject)                                   // localhost:5000/addProject
+	e.GET("/projectDetail/:id", projectDetail)                         // localhost:5000/projectDetail
+	e.POST("/addProject", middleware.UploadFile(formAddProject))       //localhost:5000/formAddProject
+	e.GET("/editProject/:id", editProject)                             // localhost:5000/editProject/:id
+	e.POST("/editProject/:id", middleware.UploadFile(editProjectDone)) //localhost:5000/editProject/:id
+	e.GET("/deleteProject/:id", deleteProject)                         // localhost:5000/deleteProject/:id
 
 	e.GET("/formRegister", register) //localhost:5000/register
 	e.GET("/formLogin", login)
@@ -90,21 +93,16 @@ func home(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"Message": err.Error()})
 	}
 
-	// if session.Values["isLogin"] != true {
-	// 	userData.IsLogin = false
-	// } else {
-	// 	userData.IsLogin = session.Values["isLogin"].(bool)
-	// 	userData.Name = session.Values["name"].(string)
-	// }
-
-	data, _ := connect.Conn.Query(context.Background(), "SELECT Id, Title, (End_Date - Start_Date) / 30 as Diff, Content, Author, Techno[1], Techno[2], Techno[3], Techno[4], Image FROM tb_projectweb46;")
+	session, _ := session.Get("session", c)
 
 	var result []AddProject
+
+	data, _ := connect.Conn.Query(context.Background(), "SELECT tb_projectweb46.id, title, (End_Date - Start_Date) / 30 as Diff, content, tb_user.name AS author, Techno[1], Techno[2], Techno[3], Techno[4], image, tb_user.id FROM tb_projectweb46 LEFT JOIN tb_user ON tb_projectweb46.author = tb_user.id ORDER BY tb_projectweb46.id DESC;")
 
 	for data.Next() {
 
 		var each = AddProject{}
-		err := data.Scan(&each.Id, &each.Title, &each.Diff, &each.Content, &each.Author, &each.TechJS, &each.TechGolang, &each.TechGithub, &each.TechNodeJs, &each.Image)
+		err := data.Scan(&each.Id, &each.Title, &each.Diff, &each.Content, &each.Author, &each.TechJS, &each.TechGolang, &each.TechGithub, &each.TechNodeJs, &each.Image, &each.UserId)
 		if err != nil {
 			fmt.Println(err.Error())
 			return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": err.Error()})
@@ -113,8 +111,6 @@ func home(c echo.Context) error {
 		result = append(result, each)
 
 	}
-
-	session, _ := session.Get("session", c)
 
 	dataQuery := map[string]interface{}{
 		"dataProject":  result,
@@ -189,14 +185,6 @@ func projectDetail(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"Message": err.Error()})
 	}
 
-	var detailProject = AddProject{}
-
-	dataErr := connect.Conn.QueryRow(context.Background(), "SELECT Id, Title, End_Date-Start_Date as Diff, TO_CHAR(Start_Date, 'DD-Mon-YYYY') Start_Date, TO_CHAR(End_Date, 'DD-Mon-YYYY') End_Date, Content, Image, Author, Techno[1], Techno[2], Techno[3], Techno[4] FROM tb_projectweb46 WHERE Id = $1;", id).Scan(&detailProject.Id, &detailProject.Title, &detailProject.Diff, &detailProject.StartDate, &detailProject.EndDate, &detailProject.Content, &detailProject.Image, &detailProject.Author, &detailProject.TechJS, &detailProject.TechGolang, &detailProject.TechGithub, &detailProject.TechNodeJs)
-
-	if dataErr != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": dataErr.Error()})
-	}
-
 	session, _ := session.Get("session", c)
 
 	if session.Values["isLogin"] != true {
@@ -204,6 +192,14 @@ func projectDetail(c echo.Context) error {
 	} else {
 		userData.IsLogin = session.Values["isLogin"].(bool)
 		userData.Name = session.Values["name"].(string)
+	}
+
+	var detailProject = AddProject{}
+
+	dataErr := connect.Conn.QueryRow(context.Background(), "SELECT tb_projectweb46.Id, Title, End_Date-Start_Date as Diff, TO_CHAR(Start_Date, 'DD-Mon-YYYY') Start_Date, TO_CHAR(End_Date, 'DD-Mon-YYYY') End_Date, Content, Image, tb_user.name AS author, Techno[1], Techno[2], Techno[3], Techno[4] FROM tb_projectweb46 LEFT JOIN tb_user ON tb_projectweb46.author = tb_user.id WHERE tb_user.id = $1;", id).Scan(&detailProject.Id, &detailProject.Title, &detailProject.Diff, &detailProject.StartDate, &detailProject.EndDate, &detailProject.Content, &detailProject.Image, &detailProject.Author, &detailProject.TechJS, &detailProject.TechGolang, &detailProject.TechGithub, &detailProject.TechNodeJs)
+
+	if dataErr != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": dataErr.Error()})
 	}
 
 	dataQuery := map[string]interface{}{
@@ -217,16 +213,18 @@ func projectDetail(c echo.Context) error {
 // Func POST addProject
 func formAddProject(c echo.Context) error {
 
+	session, _ := session.Get("session", c)
+
 	Title := c.FormValue("titleProject")
 	Content := c.FormValue("contentProject")
-	Author := "Yoga Wicaksono"
+	Author := session.Values["id"]
 	StartDate := c.FormValue("startDate")
 	EndDate := c.FormValue("endDate")
 	TechJS := c.FormValue("JavaScript")
 	TechGolang := c.FormValue("Golang")
 	TechGithub := c.FormValue("Github")
 	TechNodeJs := c.FormValue("NodeJs")
-	Image := "image.png"
+	Image := c.Get("dataFile").(string)
 
 	_, err := connect.Conn.Exec(context.Background(), "INSERT INTO tb_projectweb46 (Title, Content, Author, Start_Date, End_Date, Techno[1], Techno[2], Techno[3], Techno[4], Image) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", Title, Content, Author, StartDate, EndDate, TechJS, TechGolang, TechGithub, TechNodeJs, Image)
 
@@ -275,18 +273,20 @@ func editProject(c echo.Context) error {
 // Func POST editProject
 func editProjectDone(c echo.Context) error {
 
+	session, _ := session.Get("session", c)
+
 	Id, _ := strconv.Atoi(c.Param("id"))
 
 	Title := c.FormValue("titleProject")
 	Content := c.FormValue("contentProject")
-	Author := "Yoga Wicaksono"
+	Author := session.Values["id"]
 	StartDate := c.FormValue("startDate")
 	EndDate := c.FormValue("endDate")
 	TechJS := c.FormValue("JavaScript")
 	TechGolang := c.FormValue("Golang")
 	TechGithub := c.FormValue("Github")
 	TechNodeJs := c.FormValue("NodeJs")
-	Image := "image.png"
+	Image := c.Get("dataFile").(string)
 
 	_, err := connect.Conn.Exec(context.Background(), "UPDATE tb_projectweb46 SET Title=$2, Content=$3, Author=$4, Start_Date=$5, End_Date=$6, Techno[1]=$7, Techno[2]=$8, Techno[3]=$9, Techno[4]=$10, Image=$11 WHERE Id = $1", Id, Title, Content, Author, StartDate, EndDate, TechJS, TechGolang, TechGithub, TechNodeJs, Image)
 

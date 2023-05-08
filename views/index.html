@@ -152,8 +152,8 @@
             <!-- Dynamic Content -->
             {{range $index, $data := .dataProject}}
                 {{if $data.LoginName}}
-                <div class="col card my-3" style="width: 19rem;">
-                    <img src="upload/{{$data.Image}}" class="mt-2 card-img-top rounded">
+                <div class="col card my-3 justify-content-around" style="width: 19rem;">
+                    <img src="upload/{{$data.Image}}" class="mt-2 card-img-top rounded" style="height: 11rem;">
                     <div class="card-title fw-bold mt-2 mx-2">
                         <a class="linkDetail" href="/projectDetail/{{$data.UserId}}">
                             <p class="h5 m-0">
@@ -205,8 +205,8 @@
                 </div>
                 {{else}}
                     {{if $.DataSession.NotLogin}}
-                    <div class="col card my-3" style="width: 19rem;">
-                        <img src="upload/{{$data.Image}}" class="mt-2 card-img-top rounded">
+                    <div class="col card my-3 justify-content-around" style="width: 19rem;">
+                        <img src="upload/{{$data.Image}}" class="mt-2 card-img-top rounded" style="height: 11rem;">
                         <div class="card-title fw-bold mt-2 mx-2">
                             <a class="linkDetail" href="/projectDetail/{{$data.UserId}}">
                                 <p class="h5 m-0">

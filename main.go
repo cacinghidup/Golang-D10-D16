@@ -350,11 +350,15 @@ func register(c echo.Context) error {
 func login(c echo.Context) error {
 	template, err := template.ParseFiles("views/login.html")
 
+	//Pengecekan jika sudah login (Private Route)
+	session, _ := session.Get("session", c)
+	if session.Values["isLogin"] == true {
+		return c.Redirect(http.StatusMovedPermanently, "/")
+	}
+
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"Message ": err.Error()})
 	}
-
-	session, _ := session.Get("session", c)
 
 	messageFlash := map[string]interface{}{
 		"FlashStatus":  session.Values["status"],
